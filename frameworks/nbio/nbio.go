@@ -53,7 +53,7 @@ func main() {
 	log.Fatal(rpcSvr.Run(fmt.Sprintf(":%v", *rpcPort)))
 }
 
-func onEcho(w http.ResponseWriter, r *http.Request) {
+func onEcho(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	data := r.Body.(*nbhttp.BodyReader).RawBody()
 	if len(data) > 0 {
 		w.Write(data)
