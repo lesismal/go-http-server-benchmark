@@ -40,8 +40,6 @@ func main() {
 	}
 	defer client.Stop()
 
-	chTask := make(chan chan error, *connectionNum)
-
 	engine := nbhttp.NewEngine(nbhttp.Config{})
 
 	err = engine.Start()
@@ -62,7 +60,6 @@ func main() {
 	url := fmt.Sprintf("http://127.0.0.1:%v/echo", *port)
 	handler := func() error {
 		waitting := make(chan error, 1)
-		chTask <- waitting
 		request := mempool.Malloc(*bufsize)
 		response := mempool.Malloc(*bufsize)
 		rand.Read(request)
