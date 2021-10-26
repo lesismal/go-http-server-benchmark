@@ -77,7 +77,7 @@ func main() {
 				log.Fatalf("Do failed: %v", err)
 			}
 			defer res.Body.Close()
-			_, err := res.Body.Read(response)
+			_, err = res.Body.Read(response)
 			if err != nil {
 				log.Fatalf("Do failed: %v", err)
 			}
