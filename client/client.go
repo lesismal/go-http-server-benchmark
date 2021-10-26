@@ -46,7 +46,7 @@ func main() {
 		client := &http.Client{}
 		conns = append(conns, client)
 		go func() {
-			url := fmt.Sprintf("http:127.0.0.1:%v/echo", port)
+			url := fmt.Sprintf("http://127.0.0.1:%v/echo", *port)
 			request := make([]byte, *bufsize)
 			for waitting := range chTask {
 				rand.Read(request)
