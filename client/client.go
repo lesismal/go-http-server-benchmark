@@ -15,6 +15,7 @@ import (
 	"github.com/cloudwego/kitex-benchmark/runner"
 	"github.com/lesismal/arpc"
 	alog "github.com/lesismal/arpc/log"
+	"github.com/lesismal/nbio/mempool"
 	"github.com/lesismal/nbio/nbhttp"
 )
 
@@ -60,8 +61,8 @@ func main() {
 	for i := 0; i < *connectionNum; i++ {
 		go func() {
 			url := fmt.Sprintf("http://127.0.0.1:%v/echo", *port)
-			request := make([]byte, *bufsize)
 			for waitting := range chTask {
+				request := mempool.Malloc(*bufsize)
 				rand.Read(request)
 				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(request))
 				if err != nil {
@@ -76,6 +77,7 @@ func main() {
 					if !bytes.Equal(response, request) {
 						log.Fatal("not equal")
 					}
+					mempool.Free(request)
 					waitting <- err
 				})
 			}
