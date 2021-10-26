@@ -15,6 +15,7 @@ import (
 	"github.com/cloudwego/kitex-benchmark/runner"
 	"github.com/lesismal/arpc"
 	alog "github.com/lesismal/arpc/log"
+	"github.com/lesismal/nbio/nbhttp"
 )
 
 var (
@@ -43,14 +44,14 @@ func main() {
 
 	engine := nbhttp.NewEngine(nbhttp.Config{})
 
-	err := engine.Start()
+	err = engine.Start()
 	if err != nil {
 		fmt.Printf("nbio.Start failed: %v\n", err)
 		return
 	}
 	defer engine.Stop()
 
-	client := &nbhttp.Client{
+	httpClient := &nbhttp.Client{
 		Engine:          engine,
 		Timeout:         time.Second * 5,
 		MaxConnsPerHost: *connectionNum,
@@ -66,7 +67,7 @@ func main() {
 				if err != nil {
 					panic(err)
 				}
-				client.Do(req, func(res *http.Response, conn net.Conn, err error) {
+				httpClient.Do(req, func(res *http.Response, conn net.Conn, err error) {
 					if err != nil {
 						log.Fatalf("Do failed: %v", err)
 					}
