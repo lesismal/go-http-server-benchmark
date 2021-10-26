@@ -41,10 +41,22 @@ func main() {
 
 	chTask := make(chan chan error, *connectionNum)
 
-	conns := make([]*http.Client, *connectionNum)
+	engine := nbhttp.NewEngine(nbhttp.Config{})
+
+	err := engine.Start()
+	if err != nil {
+		fmt.Printf("nbio.Start failed: %v\n", err)
+		return
+	}
+	defer engine.Stop()
+
+	client := &nbhttp.Client{
+		Engine:          engine,
+		Timeout:         time.Second * 5,
+		MaxConnsPerHost: *connectionNum,
+	}
+
 	for i := 0; i < *connectionNum; i++ {
-		client := &http.Client{}
-		conns = append(conns, client)
 		go func() {
 			url := fmt.Sprintf("http://127.0.0.1:%v/echo", *port)
 			request := make([]byte, *bufsize)
@@ -54,16 +66,17 @@ func main() {
 				if err != nil {
 					panic(err)
 				}
-				res, err := client.Do(req)
-				if err != nil {
-					log.Fatalf("Do failed: %v", err)
-				}
-				defer res.Body.Close()
-				response, err := ioutil.ReadAll(res.Body)
-				if !bytes.Equal(response, request) {
-					log.Fatal("not equal")
-				}
-				waitting <- err
+				cli.Do(req, func(res *http.Response, conn net.Conn, err error) {
+					if err != nil {
+						log.Fatalf("Do failed: %v", err)
+					}
+					defer res.Body.Close()
+					response, err := ioutil.ReadAll(res.Body)
+					if !bytes.Equal(response, request) {
+						log.Fatal("not equal")
+					}
+					waitting <- err
+				})
 			}
 		}()
 	}
@@ -83,7 +96,7 @@ func main() {
 		log.Fatalf("call begain failed: %v", err)
 	}
 
-	recorder := perf.NewRecorder(fmt.Sprintf("client@%v", *framework))
+	recorder := perf.NewRecorder("client@nbio")
 	recorder.Begin()
 
 	r.Run(*framework, handler, *connectionNum, *total, *bufsize, 0)

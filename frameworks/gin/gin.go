@@ -27,7 +27,7 @@ func main() {
 		log.Fatalf("gin server exit: %v", router.Run(fmt.Sprintf(":%v", *port)))
 	}()
 
-	recorder := perf.NewRecorder("server@net")
+	recorder := perf.NewRecorder("server@gin")
 
 	rpcSvr := arpc.NewServer()
 	rpcSvr.Handler.Handle("action", func(ctx *arpc.Context) {

@@ -23,7 +23,7 @@ func main() {
 		log.Fatalf("gin server exit: %v", fasthttp.ListenAndServe(fmt.Sprintf(":%v", *port), onEcho))
 	}()
 
-	recorder := perf.NewRecorder("server@net")
+	recorder := perf.NewRecorder("server@fasthttp")
 
 	rpcSvr := arpc.NewServer()
 	rpcSvr.Handler.Handle("action", func(ctx *arpc.Context) {
