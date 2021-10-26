@@ -77,7 +77,10 @@ func main() {
 				log.Fatalf("Do failed: %v", err)
 			}
 			defer res.Body.Close()
-			n, err := res.Body.Read(response)
+			_, err := res.Body.Read(response)
+			if err != nil {
+				log.Fatalf("Do failed: %v", err)
+			}
 			if !bytes.Equal(response, request) {
 				log.Fatal("not equal")
 			}
