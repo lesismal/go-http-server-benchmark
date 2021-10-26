@@ -54,7 +54,7 @@ func main() {
 	httpClient := &nbhttp.Client{
 		Engine:          engine,
 		Timeout:         time.Second * 5,
-		MaxConnsPerHost: *connectionNum,
+		MaxConnsPerHost: int32(*connectionNum),
 	}
 
 	for i := 0; i < *connectionNum; i++ {
