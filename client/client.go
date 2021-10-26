@@ -58,37 +58,33 @@ func main() {
 		MaxConnsPerHost: int32(*connectionNum),
 	}
 
-	for i := 0; i < *connectionNum; i++ {
-		go func() {
-			url := fmt.Sprintf("http://127.0.0.1:%v/echo", *port)
-			for waitting := range chTask {
-				request := mempool.Malloc(*bufsize)
-				rand.Read(request)
-				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(request))
-				if err != nil {
-					panic(err)
-				}
-				httpClient.Do(req, func(res *http.Response, conn net.Conn, err error) {
-					if err != nil {
-						log.Fatalf("Do failed: %v", err)
-					}
-					defer res.Body.Close()
-					response, err := ioutil.ReadAll(res.Body)
-					if !bytes.Equal(response, request) {
-						log.Fatal("not equal")
-					}
-					mempool.Free(request)
-					waitting <- err
-				})
-			}
-		}()
-	}
-
 	r := runner.NewRunner()
 
+	url := fmt.Sprintf("http://127.0.0.1:%v/echo", *port)
 	handler := func() error {
 		waitting := make(chan error, 1)
 		chTask <- waitting
+		request := mempool.Malloc(*bufsize)
+		response := mempool.Malloc(*bufsize)
+		rand.Read(request)
+		req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(request))
+		if err != nil {
+			panic(err)
+		}
+		httpClient.Do(req, func(res *http.Response, conn net.Conn, err error) {
+			defer mempool.Free(request)
+			defer mempool.Free(response)
+			if err != nil {
+				log.Fatalf("Do failed: %v", err)
+			}
+			defer res.Body.Close()
+			n, err := res.Body.Read(response)
+			if !bytes.Equal(response, request) {
+				log.Fatal("not equal")
+			}
+
+			waitting <- err
+		})
 		return <-waitting
 	}
 
