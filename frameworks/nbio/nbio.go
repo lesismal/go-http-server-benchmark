@@ -9,7 +9,7 @@ import (
 	"github.com/cloudwego/kitex-benchmark/perf"
 	"github.com/julienschmidt/httprouter"
 	"github.com/lesismal/arpc"
-	"github.com/lesismal/nbhttp"
+	"github.com/lesismal/nbio/nbhttp"
 )
 
 var port = flag.Int("p", 8000, "server addr")
