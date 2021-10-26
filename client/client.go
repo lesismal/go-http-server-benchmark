@@ -66,7 +66,7 @@ func main() {
 				if err != nil {
 					panic(err)
 				}
-				cli.Do(req, func(res *http.Response, conn net.Conn, err error) {
+				client.Do(req, func(res *http.Response, conn net.Conn, err error) {
 					if err != nil {
 						log.Fatalf("Do failed: %v", err)
 					}
