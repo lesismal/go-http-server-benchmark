@@ -1,5 +1,10 @@
 # go-http-server-benchmark
 
+- The more connections, nbio cost the less memory, and performance the better than other frameworks.
+
+- We can serve for [1000k or more connections](https://github.com/lesismal/nbio_examples/tree/master/websocket_1m) using nbio while other frameworks may have been OOM.
+
+
 ## 1k connections
 <img width="609" alt="c1000" src="https://user-images.githubusercontent.com/40462947/138948867-e5be0c1c-6d59-49a8-9537-ddf8fcdcf3a5.PNG">
 
