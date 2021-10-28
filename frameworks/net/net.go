@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 
 	"github.com/cloudwego/kitex-benchmark/perf"
@@ -21,21 +22,24 @@ func main() {
 
 	alog.SetLevel(alog.LevelNone)
 
-	addrs := make([]string, 50)
+	listeners := make([]net.Listener, 50)
 	for i := 0; i < 50; i++ {
-		addrs[i] = fmt.Sprintf(":%v", *port+i)
+		addr := fmt.Sprintf(":%v", *port+i)
+		ln, err := net.Listen("tcp", addr)
+		if err != nil {
+			log.Fatalf("listen failed: %v", err)
+		}
+		listeners[i] = ln
 	}
 
 	router := httprouter.New()
 	router.POST("/echo", onEcho)
-	log.Printf("net server running on: %v", addrs)
-	for idx, addr := range addrs {
+	for idx, ln := range listeners {
 		server := http.Server{
-			Addr:    addr,
 			Handler: router,
 		}
-		log.Printf("net server[%v] running on: %v", idx, addr)
-		go log.Fatalf("net server [%v] exit: %v", idx, server.ListenAndServe())
+		log.Printf("net server[%v] running on: %v", idx, ln.Addr().String())
+		go log.Fatalf("net server [%v] exit: %v", idx, server.Serve(ln))
 	}
 
 	recorder := perf.NewRecorder("server@net")

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 
 	"github.com/cloudwego/kitex-benchmark/perf"
 	"github.com/lesismal/arpc"
@@ -19,15 +20,19 @@ func main() {
 
 	alog.SetLevel(alog.LevelNone)
 
-	addrs := make([]string, 50)
+	listeners := make([]net.Listener, 50)
 	for i := 0; i < 50; i++ {
-		addrs[i] = fmt.Sprintf(":%v", *port+i)
+		addr := fmt.Sprintf(":%v", *port+i)
+		ln, err := net.Listen("tcp", addr)
+		if err != nil {
+			log.Fatalf("listen failed: %v", err)
+		}
+		listeners[i] = ln
 	}
 
-	log.Printf("fasthttp server running on: %v", addrs)
-	for idx, addr := range addrs {
-		log.Printf("fasthttp server[%v] running on: %v", idx, addr)
-		go log.Fatalf("fasthttp server[%v] exit: %v", idx, fasthttp.ListenAndServe(addr, onEcho))
+	for idx, ln := range listeners {
+		log.Printf("fasthttp server[%v] running on: %v", idx, ln.Addr().String())
+		go log.Fatalf("fasthttp server[%v] exit: %v", idx, fasthttp.Serve(ln, onEcho))
 	}
 
 	recorder := perf.NewRecorder("server@fasthttp")
