@@ -13,23 +13,30 @@ import (
 	alog "github.com/lesismal/arpc/log"
 )
 
-var port = flag.Int("p", 8000, "server addr")
-var rpcPort = flag.Int("r", 9000, "rpc server addr")
+var port = flag.Int("p", 8200, "server addr")
+var rpcPort = flag.Int("r", 9002, "rpc server addr")
 
 func main() {
 	flag.Parse()
 
 	alog.SetLevel(alog.LevelNone)
 
-	go func() {
-		router := httprouter.New()
-		router.POST("/echo", onEcho)
+	addrs := make([]string, 50)
+	for i := 0; i < 50; i++ {
+		addrs[i] = fmt.Sprintf(":%v", *port+i)
+	}
+
+	router := httprouter.New()
+	router.POST("/echo", onEcho)
+	log.Printf("net server running on: %v", addrs)
+	for idx, addr := range addrs {
 		server := http.Server{
-			Addr:    fmt.Sprintf(":%v", *port),
+			Addr:    addr,
 			Handler: router,
 		}
-		log.Fatalf("http server exit: %v", server.ListenAndServe())
-	}()
+		log.Printf("net server[%v] running on: %v", idx, addr)
+		go log.Fatalf("net server [%v] exit: %v", idx, server.ListenAndServe())
+	}
 
 	recorder := perf.NewRecorder("server@net")
 

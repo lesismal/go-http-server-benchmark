@@ -12,17 +12,22 @@ import (
 	"github.com/lesismal/nbio/nbhttp"
 )
 
-var port = flag.Int("p", 8000, "server addr")
+var port = flag.Int("p", 8100, "server addr")
 var rpcPort = flag.Int("r", 9000, "rpc server addr")
 
 func main() {
 	flag.Parse()
 
+	addrs := make([]string, 50)
+	for i := 0; i < 50; i++ {
+		addrs[i] = fmt.Sprintf(":%v", *port+i)
+	}
+
 	router := httprouter.New()
 	router.POST("/echo", onEcho)
 	engine := nbhttp.NewEngine(nbhttp.Config{
 		Network: "tcp",
-		Addrs:   []string{fmt.Sprintf(":%v", *port)},
+		Addrs:   addrs,
 		Handler: router,
 	})
 

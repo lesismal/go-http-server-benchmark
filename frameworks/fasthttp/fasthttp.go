@@ -11,17 +11,24 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-var port = flag.Int("p", 8000, "server addr")
-var rpcPort = flag.Int("r", 9000, "rpc server addr")
+var port = flag.Int("p", 8400, "server addr")
+var rpcPort = flag.Int("r", 9004, "rpc server addr")
 
 func main() {
 	flag.Parse()
 
 	alog.SetLevel(alog.LevelNone)
 
-	go func() {
-		log.Fatalf("gin server exit: %v", fasthttp.ListenAndServe(fmt.Sprintf(":%v", *port), onEcho))
-	}()
+	addrs := make([]string, 50)
+	for i := 0; i < 50; i++ {
+		addrs[i] = fmt.Sprintf(":%v", *port+i)
+	}
+
+	log.Printf("fasthttp server running on: %v", addrs)
+	for idx, addr := range addrs {
+		log.Printf("fasthttp server[%v] running on: %v", idx, addr)
+		go log.Fatalf("fasthttp server[%v] exit: %v", idx, fasthttp.ListenAndServe(addr, onEcho))
+	}
 
 	recorder := perf.NewRecorder("server@fasthttp")
 

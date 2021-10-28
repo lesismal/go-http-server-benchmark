@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/cloudwego/kitex-benchmark/perf"
@@ -19,12 +20,13 @@ import (
 )
 
 var (
-	port          = flag.Int("p", 8000, "server addr")
-	rpcPort       = flag.Int("r", 9000, "rpc server addr")
-	framework     = flag.String("f", "none", "framework name")
-	connectionNum = flag.Int("c", 100, "connection num")
-	total         = flag.Int64("n", 10000000, "total test time")
-	bufsize       = flag.Int("b", 1024, "buffer size")
+	port        = flag.Int("p", 8000, "server addr")
+	rpcPort     = flag.Int("r", 9000, "rpc server addr")
+	framework   = flag.String("f", "none", "framework name")
+	connections = flag.Int("connections", 100, "connection num")
+	concurrency = flag.Int("concurrency", 100, "connection num")
+	total       = flag.Int64("n", 10000000, "total test time")
+	bufsize     = flag.Int("b", 1024, "buffer size")
 )
 
 func main() {
@@ -49,16 +51,24 @@ func main() {
 	}
 	defer engine.Stop()
 
-	httpClient := &nbhttp.Client{
-		Engine:          engine,
-		Timeout:         time.Second * 5,
-		MaxConnsPerHost: int32(*connectionNum),
+	httpClients := []*nbhttp.Client{}
+	println("connections:", *connections)
+	println("concurrency:", *concurrency)
+	for i := 0; i < *connections; i++ {
+		httpClients = append(httpClients, &nbhttp.Client{
+			Engine:          engine,
+			Timeout:         time.Second * 5,
+			MaxConnsPerHost: 1,
+		})
 	}
 
 	r := runner.NewRunner()
 
-	url := fmt.Sprintf("http://127.0.0.1:%v/echo", *port)
+	var reqIndex uint32
 	handler := func() error {
+		idx := atomic.AddUint32(&reqIndex, 1)
+		url := fmt.Sprintf("http://127.0.0.1:%v/echo", uint32(*port)+(idx%50))
+		httpClient := httpClients[idx%uint32(len(httpClients))]
 		waitting := make(chan error, 1)
 		request := mempool.Malloc(*bufsize)
 		response := mempool.Malloc(*bufsize)
@@ -87,7 +97,7 @@ func main() {
 		return <-waitting
 	}
 
-	r.Warmup(handler, *connectionNum, 100*1000)
+	r.Warmup(handler, *concurrency, 100*1000)
 
 	err = client.Call("action", "begin", nil, time.Second)
 	if err != nil {
@@ -97,7 +107,7 @@ func main() {
 	recorder := perf.NewRecorder("client@nbio")
 	recorder.Begin()
 
-	r.Run(*framework, handler, *connectionNum, *total, *bufsize, 0)
+	r.Run(*framework, handler, *concurrency, *total, *bufsize, 0)
 
 	recorder.End()
 

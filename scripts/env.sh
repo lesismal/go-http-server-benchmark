@@ -8,7 +8,7 @@ elif [ $nprocs -gt 20 ]; then
   nprocs=20
 fi
 
-n=1000000
+n=5000000
 body=(1024)
 #concurrent=(100 200 400 600 800 1000 2000 5000 10000)
 
