@@ -9,4 +9,5 @@ require (
 	github.com/lesismal/arpc v1.2.3
 	github.com/lesismal/nbio v1.2.6
 	github.com/valyala/fasthttp v1.31.0
+	golang.org/x/crypto v0.6.0 // indirect
 )
