@@ -11,5 +11,5 @@ require (
 	github.com/lesismal/arpc v1.2.3
 	github.com/lesismal/nbio v1.2.6
 	github.com/valyala/fasthttp v1.44.0
-	golang.org/x/crypto v0.6.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 )
